@@ -1,469 +1,137 @@
-LeetCode 525: Contiguous Array
+LeetCode 525 — Contiguous Array
 
 Step 1: Understand the Problem
 
-You're given a binary array containing only 0s and 1s.
+You are given a binary array containing only 0 and 1.
 
-Find the maximum length of a contiguous subarray containing an equal number of zeros and ones.
+Your task is to find the maximum length of a contiguous subarray containing an equal number of zeros and ones.
 
 Example:
 
-nums = [0, 1, 0, 1, 1, 0]
+Input:  [0, 1, 0, 1, 1, 0, 0]
+Output: 6
 
-The entire array contains:
+Explanation:
 
-- Three zeros.
-- Three ones.
+The subarray [0, 1, 0, 1, 1, 0] contains three zeros and three ones.
 
-Therefore, the longest balanced subarray is the entire array.
+Its length is 6, so the answer is 6.
 
-Output:
+Important points:
 
-6
-
-What does contiguous mean?
-
-The elements must be next to each other without skipping any elements.
-
-For example:
-
-[0, 1, 0, 1]  → Contiguous subarray
-[0, 0, 1, 1]  → Not necessarily a subarray of the original array
-
-Our objective is to return the length, not the subarray itself.
+- The subarray must be contiguous.
+- It must contain an equal number of 0s and 1s.
+- We need the maximum length, not the number of valid subarrays.
 
 
 ---
 
-Step 2: Understand the Example
+Step 2: Think of the Brute-Force Approach
 
-Consider:
+Before optimizing, think about how you would solve this problem without any special technique.
 
-nums = [0, 1, 0, 1, 1, 0]
+Logic
 
-Let's examine some possible subarrays.
+1. Start from every possible index.
+2. Expand the subarray one element at a time.
+3. Keep counting zeros and ones.
+4. Whenever the counts are equal, calculate the subarray length.
+5. Update the maximum length.
 
-Subarray	Zeros	Ones	Length	Balanced?
-
-[0]	1	0	1	No
-[0, 1]	1	1	2	Yes
-[0, 1, 0]	2	1	3	No
-[0, 1, 0, 1]	2	2	4	Yes
-[0, 1, 0, 1, 1]	2	3	5	No
-[0, 1, 0, 1, 1, 0]	3	3	6	Yes
-
-
-The longest balanced subarray has length 6.
-
-The challenge is finding this answer efficiently without repeatedly counting zeros and ones.
-
-
----
-
-Step 3: Develop the Brute Force Approach
-
-Let's first solve the problem without thinking about optimization.
-
-3.1 How should we approach it?
-
-We need to examine every possible subarray.
-
-To generate every subarray, we need two loops:
-
-- The outer loop chooses the starting index i.
-- The inner loop chooses the ending index j.
-
-For every starting index, we expand the subarray one element at a time.
-
-While expanding, we count zeros and ones.
-
-Whenever the counts become equal, we calculate the length and update our answer.
-
-3.2 Why do we check only nums[j]?
-
-Remember your previous question!
-
-Suppose:
-
-nums = [0, 1, 0, 1]
-
-When i = 0, the inner loop expands the subarray:
-
-j = 0 → [0]
-j = 1 → [0, 1]
-j = 2 → [0, 1, 0]
-j = 3 → [0, 1, 0, 1]
-
-We count only nums[j] because each iteration introduces exactly one new element.
-
-The previous elements have already been counted.
-
-3.3 Brute Force Java Code — With Detailed Comments
+Brute-Force Code — Java
 
 class Solution {
     public int findMaxLength(int[] nums) {
-
-        // Stores the maximum length of a balanced subarray found so far.
         int maxLength = 0;
 
-        // STEP 1: Choose every possible starting index.
-        for (int i = 0; i < nums.length; i++) {
-
-            // Reset the counts for each new starting index.
+        // Try every possible starting index
+        for (int start = 0; start < nums.length; start++) {
             int zeros = 0;
             int ones = 0;
 
-            // STEP 2: Expand the subarray from starting index i.
-            for (int j = i; j < nums.length; j++) {
+            // Expand the subarray from the current starting index
+            for (int end = start; end < nums.length; end++) {
 
-                // Count only the newly added element.
-                // Earlier elements between i and j - 1
-                // have already been counted in previous iterations.
-                if (nums[j] == 0) {
+                // Count whether the current element is 0 or 1
+                if (nums[end] == 0) {
                     zeros++;
                 } else {
                     ones++;
                 }
 
-                // STEP 3: Check whether this subarray is balanced.
+                // If zeros and ones are equal, this is a valid subarray
                 if (zeros == ones) {
+                    int length = end - start + 1;
 
-                    // The subarray includes both endpoints i and j,
-                    // so its length is j - i + 1.
-                    int length = j - i + 1;
-
-                    // Keep the longest balanced subarray found so far.
+                    // Keep track of the longest valid subarray
                     maxLength = Math.max(maxLength, length);
                 }
             }
         }
 
-        // Return the longest balanced subarray length.
+        // Return the maximum length found
         return maxLength;
     }
 }
 
-3.4 Dry Run
+Complexity
 
-Input:
+- Time: O(n²) — we examine all possible subarrays.
+- Space: O(1) — we use only a few variables.
 
-nums = [0, 1, 0, 1]
+Identify the Bottleneck
 
-Initially:
+The nested loops examine every possible subarray. We need to avoid checking all of them individually.
 
-maxLength = 0
+The key question is: Can we recognize a balanced subarray without recounting all its zeros and ones?
 
-For i = 0:
-
-j	Element	Zeros	Ones	Balanced?	maxLength
-
-0	0	1	0	No	0
-1	1	1	1	Yes	2
-2	0	2	1	No	2
-3	1	2	2	Yes	4
-
-
-The maximum length is now 4.
-
-No longer balanced subarray exists, so the final answer is 4.
-
-3.5 Complexity
-
-Time complexity: O(n²)
-
-There are two nested loops. In the worst case, we examine approximately n² / 2 subarrays.
-
-Auxiliary space complexity: O(1)
-
-We only maintain a few variables: maxLength, zeros, ones, i, and j.
+Yes! We can use a prefix sum.
 
 
 ---
 
-Step 4: Identify the Bottleneck
+Step 3: Find the Pattern
 
-Now ask yourself:
+The important observation is that a subarray has an equal number of zeros and ones when their difference is zero.
 
-What is inefficient about the brute-force approach?
+Consider this array:
 
-The biggest issue is that we examine every possible subarray.
+Index:  0  1  2  3  4  5
+Array: [0, 1, 0, 1, 1, 0]
 
-Consider:
+Let's assign values to the elements:
 
-[0, 1, 0, 1, 1, 0]
+- Every 0 becomes -1.
+- Every 1 becomes +1.
 
-We repeatedly count zeros and ones for different subarrays.
+The array effectively becomes:
 
-But there is a mathematical property that allows us to identify balanced subarrays without counting both values separately.
+[-1, +1, -1, +1, +1, -1]
 
-Let's derive it.
+Why does this work?
 
-The key observation
+Suppose a subarray contains:
 
-Imagine transforming the array using this rule:
+[0, 1, 0, 1]
 
-0 → -1
-1 → +1
+After transformation:
 
-For example:
+[-1, +1, -1, +1]
 
-Original:     [0, 1, 0, 1]
-Transformed:  [-1, 1, -1, 1]
-
-Calculate the sum:
+Its sum is:
 
 -1 + 1 - 1 + 1 = 0
 
-Why?
-
-Because every zero contributes -1, and every one contributes +1.
-
-When the numbers of zeros and ones are equal, their contributions cancel out.
-
-For example:
-
-[0, 1, 1, 0]
-
-Transformed:
-[-1, 1, 1, -1]
-
-Sum = -1 + 1 + 1 - 1
-    = 0
+The number of zeros equals the number of ones, so their transformed values cancel each other out.
 
 Therefore:
 
 A subarray has equal numbers of zeros and ones if and only if its transformed sum is zero.
 
-We have now converted the original problem into finding the longest subarray with a sum of zero.
+We don't actually need to modify the array. We can maintain a running balance:
 
-This is the breakthrough that leads to the optimal solution.
-
-
----
-
-Step 5: Derive the Optimal Approach
-
-We will use two concepts:
-
-1. Prefix balance.
-2. A HashMap.
-
-Let's understand each before writing the code.
-
-5.1 Concept 1: Prefix Balance
-
-Instead of creating a separate transformed array, we can calculate the balance as we traverse the original array.
-
-Use these rules:
-
-If nums[i] == 0:
-    balance--
-
-If nums[i] == 1:
-    balance++
-
-Let's trace:
-
-nums = [0, 1, 0, 1, 1, 0]
-
-Initially:
-
-balance = 0
-
-Now process each element.
-
-Index	Number	Operation	Balance
-
-0	0	balance--	-1
-1	1	balance++	0
-2	0	balance--	-1
-3	1	balance++	0
-4	1	balance++	1
-5	0	balance--	0
-
-
-The balance values are:
-
-Index:    0    1    2    3    4    5
-Number:   0    1    0    1    1    0
-Balance: -1    0   -1    0    1    0
-
-Notice that the balance becomes 0 at indices 1, 3, and 5.
-
-At index 5, the balance is zero because the entire array contains equal numbers of zeros and ones.
-
-But there is something even more useful here.
-
-We don't need the balance to be zero. We only need to find the same balance at two different positions.
-
-Let's understand why.
-
-5.2 Concept 2: Why Does a Repeated Balance Matter?
-
-Consider:
-
-nums = [1, 1, 0, 0, 1]
-
-Let's calculate the balance.
-
-Position	Number	Balance
-
-Before the array	—	0
-0	1	1
-1	1	2
-2	0	1
-3	0	0
-4	1	1
-
-
-Notice:
-
-Index 0 → Balance = 1
-Index 2 → Balance = 1
-Index 4 → Balance = 1
-
-The balance 1 occurs at three positions.
-
-Let's focus on indices 0 and 2.
-
-At index 0, the balance is 1.
-
-At index 2, the balance is also 1.
-
-What happened between those positions?
-
-Index 0: [1]
-Index 1:  1
-Index 2:  0
-
-The balance increased by 1 when we processed the 1 at index 1, then decreased by 1 when we processed the 0 at index 2.
-
-Those two changes cancelled out.
-
-Therefore, the subarray between the repeated balances is:
-
-nums[1..2] = [1, 0]
-
-It contains one zero and one one!
-
-Its length is:
-
-2 - 0 = 2
-
-Now compare indices 0 and 4.
-
-The balance is 1 at both positions, so the elements between them also have a net balance change of zero.
-
-The subarray is:
-
-nums[1..4] = [1, 0, 0, 1]
-
-It contains two ones and two zeros.
-
-Its length is:
-
-4 - 0 = 4
-
-The rule: If the same balance occurs at indices j and i, the subarray from j + 1 through i has equal numbers of zeros and ones. Its length is i - j.
-
-This is the central idea of the optimal solution.
-
-5.3 Concept 3: Why Do We Need a HashMap?
-
-We need to remember the first index where each balance appeared.
-
-We can use:
-
-Map<Integer, Integer> firstIndex = new HashMap<>();
-
-Here:
-
-- The key is the balance.
-- The value is the earliest index where that balance appeared.
-
-For example:
-
-Balance → Earliest index
-
-1 → 0
-2 → 1
-0 → 3
-
-When a balance appears again, we calculate:
-
-int length = i - firstIndex.get(balance);
-
-Then update:
-
-maxLength = Math.max(maxLength, length);
-
-Why store the earliest index?
-
-Suppose balance 1 appears at indices 0, 2, and 4.
-
-Using the earliest index:
-
-4 - 0 = 4
-
-If we overwrite the earliest index with 2, we get:
-
-4 - 2 = 2
-
-We would miss the longer subarray.
-
-Therefore, we store a balance's index only the first time it appears.
-
-One important initialization
-
-We begin with:
-
-firstIndex.put(0, -1);
-
-This represents a balance of zero immediately before the array starts.
-
-Why is this necessary?
-
-Consider:
-
-nums = [0, 1, 0, 1]
-
-At index 3, the balance becomes zero.
-
-We want to calculate the length of the entire array:
-
-length = 3 - (-1)
-       = 4
-
-Without initializing balance zero at index -1, we could miss balanced subarrays that start at index 0.
-
-
----
-
-Step 6: Build the Optimal Algorithm Step by Step
-
-Now that we understand the concepts, let's convert them into an algorithm.
-
-Step 1: Initialize the variables
-
-int balance = 0;
-int maxLength = 0;
-
-Map<Integer, Integer> firstIndex = new HashMap<>();
-
-firstIndex.put(0, -1);
-
-- balance tracks the difference between ones and zeros.
-- maxLength stores the longest balanced subarray found.
-- firstIndex remembers the earliest position of each balance.
-- firstIndex.put(0, -1) handles subarrays that begin at index 0.
-
-Step 2: Traverse the array
-
-for (int i = 0; i < nums.length; i++) {
-
-We process each element exactly once.
-
-Step 3: Update the balance
+- If nums[i] == 0, decrease the balance by 1.
+- If nums[i] == 1, increase the balance by 1.
 
 if (nums[i] == 0) {
     balance--;
@@ -471,105 +139,187 @@ if (nums[i] == 0) {
     balance++;
 }
 
-A zero decreases the balance; a one increases it.
-
-Step 4: Check whether this balance has appeared before
-
-if (firstIndex.containsKey(balance)) {
-
-If it has, we have found a balanced subarray ending at the current index.
-
-Step 5: Calculate the length
-
-int length = i - firstIndex.get(balance);
-
-We subtract the earliest index of the same balance from the current index.
-
-Step 6: Update the maximum length
-
-maxLength = Math.max(maxLength, length);
-
-We retain whichever is larger: the previous maximum or the newly discovered length.
-
-Step 7: Otherwise, record the balance
-
-else {
-    firstIndex.put(balance, i);
-}
-
-We record the current index only if this balance has never appeared before.
-
-Important: Do not overwrite an existing index. The earliest occurrence gives us the longest possible subarray for that balance.
+Now we can solve the problem using a prefix balance and a HashMap.
 
 
 ---
 
-Step 7: Optimal Java Solution With Detailed Comments
+Step 4: Derive the Optimal Approach
 
-Here is the complete solution with comments explaining both what each statement does and why it is needed.
+Understand the Prefix Balance
+
+The balance represents the sum of all transformed elements from index 0 to the current index.
+
+Consider:
+
+Array:   [0, 1, 0, 1]
+Balance: -1, 0, -1, 0
+
+Notice that the balance becomes 0 at index 1 and again at index 3.
+
+Why is this important?
+
+The prefix ending at index 1 has a balance of 0.
+
+The prefix ending at index 3 also has a balance of 0.
+
+Because the balances are equal, the elements between those two prefix boundaries must have a sum of zero.
+
+That means the subarray between the boundaries contains equal numbers of zeros and ones.
+
+The Key Formula
+
+If the same balance appears at indices previousIndex and currentIndex, then:
+
+Subarray length = currentIndex - previousIndex
+
+For example:
+
+Index:    0   1   2   3
+Array:   [0,  1,  0,  1]
+Balance: -1,  0, -1,  0
+
+At index 1, the balance is 0.
+
+At index 3, the balance is also 0.
+
+Therefore:
+
+Length = 3 - 1 = 2
+
+The subarray [0, 1] between those indices is balanced.
+
+But there's an important detail: we should store the earliest index at which each balance appears.
+
+Why?
+
+Because the earliest index gives us the longest possible subarray when the same balance appears again.
+
+What Should the HashMap Store?
+
+We use:
+
+Map<Integer, Integer> firstIndex = new HashMap<>();
+
+The mapping is:
+
+Balance → Earliest index where it appeared
+
+For example:
+
+Balance   Earliest Index
+   -1           0
+    0           1
+    1           4
+
+If the balance 0 appears again at index 5, we calculate:
+
+Length = 5 - 1 = 4
+
+We do not replace the original index with 5, because that would lose the opportunity to calculate the longer length later.
+
+Why Initialize firstIndex.put(0, -1)?
+
+We begin with:
+
+firstIndex.put(0, -1);
+
+This represents a balance of zero before the array begins.
+
+Consider:
+
+Array: [0, 1]
+
+At index 0:
+
+Balance = -1
+
+At index 1:
+
+Balance = 0
+
+Since balance 0 was previously recorded at index -1, we calculate:
+
+Length = 1 - (-1) = 2
+
+This allows us to count balanced subarrays that start at index 0.
+
+Without this initialization, we would miss such subarrays.
+
+
+---
+
+Step 5: Write the Optimal Algorithm
+
+Now that we understand the logic, the algorithm becomes straightforward.
+
+1. Initialize balance = 0.
+2. Initialize maxLength = 0.
+3. Create a HashMap to store each balance's earliest index.
+4. Insert the initial balance 0 at index -1.
+5. Traverse the array from left to right.
+6. Update the balance based on the current element.
+7. If the balance already exists in the map:
+   - Calculate the length using the current index and the earliest recorded index.
+   - Update maxLength.
+8. Otherwise, store the current balance and index.
+9. Return maxLength.
+
+Optimal Code — Java
 
 import java.util.HashMap;
 import java.util.Map;
 
 class Solution {
     public int findMaxLength(int[] nums) {
-
-        // Tracks the difference between the number of ones and zeros.
-        // We treat 1 as +1 and 0 as -1.
         int balance = 0;
-
-        // Stores the length of the longest balanced subarray found so far.
         int maxLength = 0;
 
-        // Maps each balance to the earliest index where it appeared.
-        // Repeated balances help us identify balanced subarrays.
+        // Store the earliest index where each balance appears
         Map<Integer, Integer> firstIndex = new HashMap<>();
 
-        // A balance of 0 exists before the array starts, at index -1.
-        // This allows us to count balanced subarrays beginning at index 0.
+        // Initial balance before the array starts
         firstIndex.put(0, -1);
 
-        // Traverse the array once, updating the balance at each index.
+        // Traverse the array and maintain the running balance
         for (int i = 0; i < nums.length; i++) {
 
-            // A zero decreases the balance because it contributes -1.
-            // A one increases the balance because it contributes +1.
+            // Treat 0 as -1 and 1 as +1
             if (nums[i] == 0) {
                 balance--;
             } else {
                 balance++;
             }
 
-            // If this balance appeared earlier, the elements between
-            // the earlier index and i have a net balance change of zero.
-            // Therefore, that subarray has equal numbers of zeros and ones.
+            // If this balance appeared before, the subarray between
+            // the previous index and the current index is balanced
             if (firstIndex.containsKey(balance)) {
-
-                // Calculate the subarray length using the earliest
-                // occurrence of this balance and the current index.
                 int length = i - firstIndex.get(balance);
 
-                // Keep the maximum length found across all balanced subarrays.
+                // Update the maximum balanced subarray length
                 maxLength = Math.max(maxLength, length);
-
             } else {
-
-                // This is the first time we have encountered this balance.
-                // Save its index so future occurrences can form longer subarrays.
-                // Do not overwrite this index later: the earliest index
-                // gives us the maximum possible length for this balance.
+                // Store only the earliest occurrence of this balance
                 firstIndex.put(balance, i);
             }
         }
 
-        // Return the longest contiguous subarray with equal zeros and ones.
+        // Return the longest balanced subarray length
         return maxLength;
     }
 }
 
-Dry Run of the Optimal Approach
+Complexity
 
-Input:
+- Time: O(n) average — we traverse the array once, with average constant-time HashMap operations.
+- Space: O(n) — in the worst case, we store up to n + 1 distinct balances.
+
+
+---
+
+Step 6: Dry Run the Optimal Code
+
+Let's trace the code using:
 
 nums = [0, 1, 0, 1]
 
@@ -577,11 +327,14 @@ Initially:
 
 balance = 0
 maxLength = 0
-firstIndex = {0 = -1}
 
-Let's process the array.
+firstIndex = {
+    0: -1
+}
 
-i	nums[i]	Balance after update	Previously seen?	Length found	maxLength
+We use the initial mapping 0: -1 to handle subarrays starting at index 0.
+
+Index i	nums[i]	Updated balance	Balance already exists?	Length calculated	maxLength
 
 0	0	-1	No	—	0
 1	1	0	Yes, at -1	1 - (-1) = 2	2
@@ -589,81 +342,187 @@ i	nums[i]	Balance after update	Previously seen?	Length found	maxLength
 3	1	0	Yes, at -1	3 - (-1) = 4	4
 
 
-Let's examine the last iteration.
+Let's understand each iteration.
 
-At index 3:
+Iteration 1: Index 0
+
+nums[0] = 0
+balance = -1
+
+Balance -1 is not in the map, so store:
+
+firstIndex = {
+     0: -1,
+    -1:  0
+}
+
+No balanced subarray has been found yet.
+
+Iteration 2: Index 1
+
+nums[1] = 1
+balance = 0
+
+Balance 0 already exists at index -1.
+
+Calculate:
+
+length = 1 - (-1) = 2
+
+The subarray is:
+
+[0, 1]
+
+It contains one zero and one one.
+
+Update:
+
+maxLength = 2
+
+Iteration 3: Index 2
+
+nums[2] = 0
+balance = -1
+
+Balance -1 already exists at index 0.
+
+Calculate:
+
+length = 2 - 0 = 2
+
+The subarray is:
+
+[1, 0]
+
+The maximum length remains 2.
+
+Notice: We do not overwrite the earliest index of balance -1.
+
+Iteration 4: Index 3
 
 nums[3] = 1
 balance = 0
 
-We already encountered balance 0 at index -1.
+Balance 0 already exists at index -1.
 
-Therefore:
+Calculate:
 
-length = 3 - (-1)
-       = 4
+length = 3 - (-1) = 4
 
-The entire array is balanced, so:
+The subarray is:
+
+[0, 1, 0, 1]
+
+It contains two zeros and two ones.
+
+Update:
 
 maxLength = 4
 
-Final output: 4
+Final output:
 
-Why is the optimal solution faster?
-
-The brute-force approach checks every possible subarray, requiring O(n²) time.
-
-The optimal approach:
-
-1. Processes each element once.
-2. Updates the balance.
-3. Performs an average O(1) HashMap lookup.
-4. Updates the answer when it finds a repeated balance.
-
-Therefore:
-
-Complexity	Brute Force	Optimal
-
-Time	O(n²)	O(n) average
-Auxiliary space	O(1)	O(n)
-
+4
 
 
 ---
 
-Step 8: Edge Cases and Independent Practice
+Step 7: Understand the Tricky Parts
 
-Before moving on, understand how the algorithm handles these cases.
+These are the most important details to remember when implementing this solution independently.
 
-Input	Output	Reason
+1. Why do we change 0 to -1?
 
-[0, 1]	2	One zero and one one
-[0, 1, 0, 1]	4	The entire array is balanced
-[0, 0, 0]	0	No balanced non-empty subarray
-[1, 1, 1]	0	No balanced non-empty subarray
-[0, 1, 1, 0]	4	The entire array is balanced
+Because we want zeros and ones to cancel each other out.
+
+0 → -1
+1 → +1
+
+When a subarray contains equal numbers of zeros and ones, its transformed sum is zero.
+
+2. Why does a repeated balance indicate a balanced subarray?
+
+Suppose the balance is 2 at index i and becomes 2 again at index j.
+
+The sum of the elements between those prefix boundaries must be zero:
+
+balance[j] - balance[i] = 2 - 2 = 0
+
+Therefore, the subarray between them contains equal numbers of zeros and ones.
+
+Its length is:
+
+j - i
+
+3. Why store the earliest index?
+
+We want the longest balanced subarray.
+
+For a fixed current index, subtracting the earliest previous index gives the largest possible length.
+
+Therefore, once a balance has been stored, we must not overwrite its first occurrence.
+
+4. Why use firstIndex.put(0, -1)?
+
+It lets us calculate the length of a balanced subarray that begins at index 0.
+
+For example:
+
+nums = [0, 1]
+
+The balance returns to zero at index 1.
+
+Because the initial balance was recorded at index -1:
+
+length = 1 - (-1) = 2
+
+5. Why is this different from LeetCode 560?
+
+Both problems use prefix sums and HashMaps, but the map stores different information.
+
+Feature	LC 560 — Subarray Sum Equals K	LC 525 — Contiguous Array
+
+Goal	Count subarrays whose sum equals k	Find the longest balanced subarray
+Prefix representation	Actual running sum	Running balance (0 → -1, 1 → +1)
+HashMap stores	Prefix sum → frequency	Balance → earliest index
+When a match occurs	Add the frequency to the count	Calculate the length and update the maximum
+Initial mapping	0 → 1	0 → -1
+Result	Number of valid subarrays	Maximum length
 
 
-Your independent practice
+Remember: LC 560 counts how many valid subarrays exist, while LC 525 finds the longest valid subarray.
 
-Without looking at the code, try answering these three questions:
 
-1. Balance calculation
+---
 
-For this array:
+Step 8: Complexity Analysis and Final Revision
 
-nums = [1, 0, 0, 1, 1]
+Brute Force vs. Optimal
 
-Write the balance after processing every element.
+Approach	Time Complexity	Auxiliary Space	Main Idea
 
-2. HashMap logic
+Brute force	O(n²)	O(1)	Try every starting index and expand the subarray while counting zeros and ones
+Optimal	O(n) average	O(n)	Transform the binary array into a running balance and use a HashMap to find repeated balances
 
-If the balance is 2 at index 2 and appears again at index 6, what is the length of the balanced subarray?
 
-3. Earliest index
+The Complete Logic to Remember
 
-Suppose balance -1 first appears at index 0, appears again at index 3, and appears again at index 5.
+When you encounter a problem asking for the longest subarray with equal numbers of zeros and ones, think:
 
-Why must we keep index 0 rather than update the stored index every time?
+1. Equal zeros and ones means their difference is zero.
+2. Transform 0 to -1 and keep 1 as +1.
+3. Maintain a running prefix balance.
+4. A repeated balance means the subarray between the occurrences has a sum of zero.
+5. Store the earliest index of every balance.
+6. When a balance repeats, calculate currentIndex - earliestIndex.
+7. Update the maximum length.
+8. Initialize the map with 0 → -1 to handle subarrays starting at index 0.
 
-Once you can answer these questions, you'll be able to reconstruct the key logic of LC 525 rather than memorize the solution.
+Before Moving to the Next Problem
+
+Try answering these three questions without looking at the solution:
+
+1. Why does a repeated prefix balance guarantee that the subarray between those occurrences has equal zeros and ones?
+2. What would go wrong if you updated the stored index every time the same balance appeared?
+3. Why do we initialize the map with firstIndex.put(0, -1) instead of leaving it empty?
+
+If you can explain all three in your own words, you understand the core idea behind LeetCode 525 — Contiguous Array.
